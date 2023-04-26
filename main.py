@@ -1,8 +1,8 @@
 import argparse
+import socket
 import subprocess
-import threading
 
-from utils.manager import supervisor, add_user, reset, load
+from utils.manager import supervisor, reset, load
 
 
 if __name__ == '__main__':
@@ -13,9 +13,16 @@ if __name__ == '__main__':
     subprasers = parser.add_subparsers(dest="command", required=True)
     subprasers.add_parser("run", help="run main controller.")
     subprasers.add_parser("reset", help="reset users' traffic. Normally used by crontab.")
-    parser.add_argument("--filename", type=str, default="ss-manager.csv",
+    subprasers.add_parser("list", help="print all users' info")
+    add = subprasers.add_parser("add", help="add new user")
+    add.add_argument("--monthly-traffic", type=str, default=100,
+                     help="monthly traffic set for this user (GB). Using 100 by default.")
+    add = subprasers.add_parser("del", help="delete user from ss-manager")
+    add.add_argument("--port", type=str, required=True,
+                     help="indicate the port of user to remove")
+    parser.add_argument("--filename", type=str, default="/var/lib/ss-manager.csv",
                         help="name of the csv file used for persistent storage of data. "
-                             "Using ss-manager.csv by default.")
+                             "Using /var/lib/ss-manager.csv by default.")
     parser.add_argument("--start-port", type=int, default=8001,
                         help="users' port pool start point (included). Using 8001 by default.")
     parser.add_argument("--end-port", type=int, default=8501,
@@ -34,18 +41,28 @@ if __name__ == '__main__':
                              "Using 1 indicating record refreshed at 1:00 on reset date by default.")
 
     args = parser.parse_args()
-    # Start ss-manager
-    subprocess.Popen(["/usr/bin/ss-manager",
-                      "--manager-address", "/tmp/manager.sock",
-                      "--executable", "/usr/bin/ss-server",
-                      "-c", "/etc/shadowsocks-libev/config.json"])
     # Load data and init users
     load(**args.__dict__)
     if args.command == "run":
-        t = threading.Thread(target=supervisor)
-        t.start()
-        t.join()
+        # Start ss-manager
+        subprocess.Popen(["/usr/bin/ss-manager",
+                          "--manager-address", "/tmp/manager.sock",
+                          "--executable", "/usr/bin/ss-server",
+                          "-c", "/etc/shadowsocks-libev/config.json"])
+        supervisor()
     elif args.command == "reset":
         reset()
+    elif args.command == "add":
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+        sock.sendto(f"add:{args.monthly_traffic * 1024 * 1024 * 1024}".encode(), "/tmp/ss-manager-controller.sock")
+        print(sock.recvfrom(1024 * 1024)[0].decode())
+    elif args.command == "add":
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+        sock.sendto(f"del:{args.port}".encode(), "/tmp/ss-manager-controller.sock")
+        print(sock.recvfrom(1024 * 1024)[0].decode())
+    elif args.command == "list":
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+        sock.sendto("list".encode(), "/tmp/ss-manager-controller.sock")
+        print(sock.recvfrom(1024 * 1024)[0].decode())
     else:
         pass

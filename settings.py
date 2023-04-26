@@ -1,7 +1,8 @@
 from utils.controller import SSManagerController
 
-data_filename = "ss-manager.csv"
-default_monthly_traffic = 100 * 1024 * 1024 * 1024
+data_filename = "/var/lib/ss-manager.csv"
+sock = "/tmp/ss-manager-controller.sock"
+default_monthly_traffic = 100
 start_port = 8001
 end_port = 8501
 refresh_interval = 30

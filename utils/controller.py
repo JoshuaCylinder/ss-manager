@@ -15,7 +15,7 @@ class SSManagerController:
     def _call(self, to_send: str):
         sock = socket.socket(socket.AF_UNIX if isinstance(self.address, str) else socket.AF_INET, socket.SOCK_DGRAM)
         sock.sendto((to_send + "\n").encode(), self.address)
-        return sock.recvfrom(1024)[0].decode()
+        return sock.recvfrom(1024 * 1024)[0].decode()
 
     def ping(self):
         return json.loads(self._call("ping")[6:])
@@ -25,3 +25,8 @@ class SSManagerController:
 
     def remove(self, port: int):
         return self._call('remove: {"server_port": '+str(port)+'}')
+
+
+if __name__ == '__main__':
+    print(SSManagerController("113.31.102.202:10001").ping())
+    # print(add(8388, "3de30458-ecb7-4607-b84b-4a72e81ab3cf"))
