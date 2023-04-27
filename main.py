@@ -1,9 +1,12 @@
 import argparse
+import random
 import socket
 import subprocess
+import threading
 
 from utils.encryption import format_secret
 from utils.manager import supervisor, reset, load
+from utils.api import api_controller
 
 
 if __name__ == '__main__':
@@ -55,6 +58,7 @@ if __name__ == '__main__':
                           "--manager-address", "/tmp/manager.sock",
                           "--executable", "/usr/bin/ss-server",
                           "-c", "/etc/shadowsocks-libev/config.json"])
+        threading.Thread(target=api_controller).start()
         supervisor()
     elif args.command == "reset":
         reset()

@@ -1,11 +1,8 @@
 import os.path
 import csv
 import random
-import socket
-import threading
 import time
 import uuid
-
 from prettytable import PrettyTable
 
 import settings
@@ -97,53 +94,23 @@ def load(**kwargs):
                 settings.port_pool.remove(int(row[0]))
 
 
-def _api_controller():
-    sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-    sock.bind("/tmp/ss-manager-controller.sock")
-    while True:
-        data = sock.recvfrom(1024)
-        if not data:
-            continue
-        data = data[0].decode().strip()
-        if data.startswith("add") and ":" in data:
-            # add user
-            _add_user(int(data.split(":")[1]))
-            sock.sendto(b"ok", data[1])
-        elif data == "list":
-            # list users
-            table = PrettyTable(['port', 'password', 'monthly_traffic', 'last_traffic'])
-            for user in users:
-                table.add_row([
-                    str(user.port), user.password,
-                    str(round(user.monthly_traffic / 1024 / 1024 / 1024, 2)) + "GB",
-                    str(round(user.current_traffic / 1024 / 1024 / 1024, 2)) + "GB"
-                ])
-            sock.sendto(str(table).encode(), data[1])
-        elif data.startswith("del"):
-            _del_user(int(data.split(":")[1]))
-            sock.sendto(b"ok", data[1])
-        else:
-            sock.sendto(b"", data[1])
-
-
 def supervisor():
     # Start reset crontab
     os.system(f"echo '0  {settings.reset_time}    {settings.reset_date} * *   root    "
               f"cd /ss-manager-controller && python3 main.py reset' >> /etc/crontab")
     os.system("cron")
-    threading.Thread(target=_api_controller).start()
     # Start service
     while True:
         time.sleep(settings.refresh_interval)
         _refresh()
 
 
-def _add_user(monthly_traffic: int):
+def add_user(monthly_traffic: int):
     users.append(User(monthly_traffic=monthly_traffic))
     _refresh()
 
 
-def _del_user(port: int):
+def del_user(port: int):
     settings.controller.remove(port)
     for user in users:
         if user.port == port:
@@ -152,9 +119,20 @@ def _del_user(port: int):
     _refresh()
 
 
+def list_users():
+    table = PrettyTable(['port', 'password', 'monthly_traffic', 'last_traffic'])
+    for user in users:
+        table.add_row([
+            str(user.port), user.password,
+            str(round(user.monthly_traffic / 1024 / 1024 / 1024, 2)) + "GB",
+            str(round(user.current_traffic / 1024 / 1024 / 1024, 2)) + "GB"
+        ])
+    return str(table)
+
+
 def reset():
     for user in users:
         user.reset()
 
 
-__all__ = ["load", "supervisor", "reset"]
+__all__ = ["load", "supervisor", "reset", "add_user", "del_user", "list_users"]
