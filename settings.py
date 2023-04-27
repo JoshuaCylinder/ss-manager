@@ -7,6 +7,7 @@ start_port = 8001
 end_port = 8501
 refresh_interval = 30
 addrport_or_sock = "/tmp/manager.sock"
+key = b"0123456789abcdef"
 reset_date = 1
 reset_time = 0
 

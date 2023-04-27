@@ -2,6 +2,7 @@ import argparse
 import socket
 import subprocess
 
+from utils.encryption import format_secret
 from utils.manager import supervisor, reset, load
 
 
@@ -17,9 +18,12 @@ if __name__ == '__main__':
     add = subprasers.add_parser("add", help="add new user")
     add.add_argument("--monthly-traffic", type=str, default=100,
                      help="monthly traffic set for this user (GB). Using 100 by default.")
-    add = subprasers.add_parser("del", help="delete user from ss-manager")
-    add.add_argument("--port", type=str, required=True,
-                     help="indicate the port of user to remove")
+    delete = subprasers.add_parser("del", help="delete user from ss-manager")
+    delete.add_argument("--port", type=str, required=True,
+                        help="indicate the port of user to remove")
+    parser.add_argument("--key", type=str,
+                        default=lambda: "".join([random.choice("01234567890abcdef") for _ in range(16)]).encode(),
+                        help="the AES key of network transportation encryption.")
     parser.add_argument("--filename", type=str, default="/var/lib/ss-manager.csv",
                         help="name of the csv file used for persistent storage of data. "
                              "Using /var/lib/ss-manager.csv by default.")
@@ -41,6 +45,8 @@ if __name__ == '__main__':
                              "Using 1 indicating record refreshed at 1:00 on reset date by default.")
 
     args = parser.parse_args()
+    # Init AES key
+    format_secret(args)
     # Load data and init users
     load(**args.__dict__)
     if args.command == "run":
