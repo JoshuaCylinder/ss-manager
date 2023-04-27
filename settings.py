@@ -9,6 +9,8 @@ refresh_interval = 30
 ss_manager_address = "/tmp/manager.sock"
 api_address = "/tmp/ss-manager-controller.sock"
 key = b"0123456789abcdef"
+ss_server = "localhost"
+ss_encryption = "aes-128-gcm"
 reset_date = 1
 reset_time = 0
 

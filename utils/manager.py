@@ -1,3 +1,4 @@
+import base64
 import os.path
 import csv
 import random
@@ -22,6 +23,7 @@ class User:
         self.password = password or str(uuid.uuid4())
         self.total_traffic = self.current_traffic = last_traffic or monthly_traffic
         self.monthly_traffic = monthly_traffic
+        settings.controller.remove(self.port)
         if self.current_traffic:
             settings.controller.add(self.port, self.password)
 
@@ -29,7 +31,7 @@ class User:
     def row_data(self):
         return [str(self.port), self.password, str(self.monthly_traffic), str(self.current_traffic)]
 
-    def refresh(self, traffic_used: int):
+    def refresh_last_traffic(self, traffic_used: int):
         """
         Refresh traffic usage return whether this user is still valid
         :param traffic_used:
@@ -60,7 +62,7 @@ def _refresh():
     with open(settings.data_filename, "w") as csvfile:
         writer = csv.writer(csvfile)
         for index, user in enumerate(users):
-            user.refresh(traffic_data[str(user.port)])
+            user.refresh_last_traffic(traffic_data[str(user.port)])
             writer.writerow(user.row_data)
 
 
@@ -126,9 +128,33 @@ def list_users():
     return str(table)
 
 
+def generate_shadowsocks_subscription_url(server, port, method, password):
+    """
+    生成Shadowsocks订阅地址
+    :param server: 服务器地址
+    :param port: 端口号
+    :param method: 加密方式
+    :param password: 密码
+    :return: Shadowsocks订阅地址
+    """
+    subscription_url = f"ss://{method}:{password}@{server}:{port}"
+    subscription_url = base64.urlsafe_b64encode(subscription_url.encode()).decode()
+    subscription_url = f"ss://{subscription_url}"
+    return subscription_url
+
+
+def get_sub(port: int):
+    for user in users:
+        if user.port == port:
+            return generate_shadowsocks_subscription_url(
+                settings.ss_server, port, settings.ss_encryption, user.password
+            )
+    return "User not found"
+
+
 def reset():
     for user in users:
         user.reset()
 
 
-__all__ = ["load", "supervisor", "reset", "add_user", "del_user", "list_users"]
+__all__ = ["load", "supervisor", "reset", "add_user", "del_user", "list_users", "get_sub"]

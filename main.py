@@ -23,6 +23,13 @@ if __name__ == '__main__':
     delete = subprasers.add_parser("del", help="delete user from ss-manager")
     delete.add_argument("--port", type=str, required=True,
                         help="indicate the port of user to remove")
+    subscription = subprasers.add_parser("sub", help="print user's ")
+    subscription.add_argument("--port", type=str, required=True,
+                              help="indicate the port of user to print subscription")
+    parser.add_argument("-ss", "--ss-server", type=str, default="localhost",
+                        help="ss-server address or domain using to generate subscription url.")
+    parser.add_argument("-se", "--ss-encryption", type=str, default="aes-128-gcm",
+                        help="ss-server encryption using to generate subscription url. Using aes-128-gcm as default.")
     parser.add_argument("--key", type=str, default="0123456789abcdef",
                         help="the AES key of network transportation encryption.")
     parser.add_argument("--data-filename", type=str, default="ss-manager.csv",
@@ -73,10 +80,12 @@ if __name__ == '__main__':
     elif args.command == "reset":
         reset()
     elif args.command == "add":
-        TCPTransporter(settings.api_address, settings.key).send(f"add:{args.monthly_traffic * 1024 * 1024 * 1024}")
+        print(TCPTransporter(settings.api_address, settings.key).send(f"add:{args.monthly_traffic * 1024 * 1024 * 1024}"))
     elif args.command == "del":
-        TCPTransporter(settings.api_address, settings.key).send(f"del:{args.port}")
+        print(TCPTransporter(settings.api_address, settings.key).send(f"del:{args.port}"))
+    elif args.command == "sub":
+        print(TCPTransporter(settings.api_address, settings.key).send(f"sub:{args.port}"))
     elif args.command == "list":
-        TCPTransporter(settings.api_address, settings.key).send("list")
+        print(TCPTransporter(settings.api_address, settings.key).send("list"))
     else:
         pass

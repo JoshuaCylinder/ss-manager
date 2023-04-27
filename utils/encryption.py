@@ -19,8 +19,6 @@ def format_secret(args):
     if len(pwd) not in [16, 24, 32]:
         raise ValueError(f"The length of key is {len(pwd)} but it should be 16, 24 or 32.")
     args.key = pwd
-    print(f"Encryption mode: AES-{len(pwd) * 8}-GCM")
-    print(f"Encryption key : {pwd.decode()}")
 
 
 def encrypt(key, message: bytes | str):
