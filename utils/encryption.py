@@ -1,9 +1,6 @@
 import json
 import os
-
 from Crypto.Cipher import AES
-
-import settings
 
 
 class ReplayAttackException(Exception):
@@ -26,11 +23,13 @@ def format_secret(args):
     print(f"Encryption key : {pwd.decode()}")
 
 
-def encrypt(message: bytes | str):
+def encrypt(key, message: bytes | str):
+    if not key:
+        return message
     if isinstance(message, str):
         message = message.encode()
     iv = os.urandom(16)
-    cipher = AES.new(settings.key, AES.MODE_GCM, nonce=iv)
+    cipher = AES.new(key, AES.MODE_GCM, nonce=iv)
     ciphertext, tag = cipher.encrypt_and_digest(message)
     return json.dumps({
         'iv': iv.hex(),
@@ -39,11 +38,13 @@ def encrypt(message: bytes | str):
     })
 
 
-def decrypt(ciphertext: str):
+def decrypt(key, ciphertext: str):
+    if not key:
+        return ciphertext
     data = json.loads(ciphertext)
     iv = bytes.fromhex(data['iv'])
     ciphertext = bytes.fromhex(data['ciphertext'])
     tag = bytes.fromhex(data['tag'])
-    cipher = AES.new(settings.key, AES.MODE_GCM, nonce=iv)
+    cipher = AES.new(key, AES.MODE_GCM, nonce=iv)
     plaintext = cipher.decrypt_and_verify(ciphertext, tag)
     return plaintext.decode()

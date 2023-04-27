@@ -13,13 +13,14 @@ class TransporterBase:
     """
     Simple data transporter. Only for ask and answer.
     """
-    def __init__(self, addrport_or_sock: str):
+    def __init__(self, addrport_or_sock: str, key: str = None):
         if ":" in addrport_or_sock:
             self.conn_type = socket.AF_INET
             self.address = (addrport_or_sock.split(":")[0], int(addrport_or_sock.split(":")[1]))
         else:
             self.conn_type = socket.AF_UNIX
             self.address = addrport_or_sock
+        self.key = key
         self.protocol = 0
         self.sock = None
 
@@ -64,8 +65,8 @@ class TCPTransporter(TransporterBase):
 
     def send(self, data):
         self.sock = self.init_sock(SENDER)
-        self.sock.sendall((e(data) + "\n").encode())
-        return d(self._real_recv(self.sock))
+        self.sock.sendall((e(self.key, data) + "\n").encode())
+        return d(self.key, self._real_recv(self.sock))
 
     def _real_recv(self, sock):
         response = b''
@@ -83,7 +84,7 @@ class TCPTransporter(TransporterBase):
         while True:
             try:
                 sock, address = self.sock.accept()
-                data = e(handler(d(self._real_recv(sock)))).encode()
+                data = e(self.key, handler(d(self.key, self._real_recv(sock)))).encode()
                 sock.sendall(data)
                 sock.close()
             except KeyboardInterrupt:
@@ -104,12 +105,12 @@ class UDPTransporter(TransporterBase):
     def send(self, data):
         try:
             self.sock = self.init_sock(SENDER)
-            data = e(data)
+            data = e(self.key, data)
             if len(data) > 1024:
                 raise RuntimeError("Data size is too big for UDP transporter (more than 1024 bytes). Use TCP instead.")
             self.sock.send(data.encode())
             data, _ = self.sock.recvfrom(1024)
-            return d(data.decode())
+            return d(self.key, data.decode())
         finally:
             if self.conn_type == socket.AF_UNIX:
                 os.remove(self.sock.getsockname())
@@ -119,10 +120,6 @@ class UDPTransporter(TransporterBase):
         while True:
             try:
                 data, address = self.sock.recvfrom(1024)
-                self.sock.sendto(e(handler(d(data.decode()))).encode(), address)
+                self.sock.sendto(e(self.key, handler(d(self.key, data.decode()))).encode(), address)
             except KeyboardInterrupt:
                 break
-
-
-if __name__ == '__main__':
-    r = TCPTransporter("/tmp/receiver.sock")

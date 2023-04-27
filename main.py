@@ -1,13 +1,12 @@
 import argparse
 import random
-import socket
-import subprocess
 import threading
 
+import settings
 from utils.encryption import format_secret
 from utils.manager import supervisor, reset, load
-from utils.api import api_controller
-
+from utils.api import api_handler
+from utils.transporter import TCPTransporter
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -38,9 +37,12 @@ if __name__ == '__main__':
                         help="default monthly traffic (GB). Using 100 by default.")
     parser.add_argument("--refresh-interval", type=int, default=30,
                         help="interval of writing data and check traffic usage. Using 30 by default.")
-    parser.add_argument("--addrport-or-sock", type=str, default="/tmp/manager.sock",
+    parser.add_argument("--ss-manager-address", type=str, default="/tmp/manager.sock",
                         help="address of ss-manager. Supporting net address and port or UDS. "
                              "Using /tmp/manager.sock by default.")
+    parser.add_argument("--api-address", type=str, default="/tmp/ss-manager-controller.sock",
+                        help="address of controllers api service. Supporting net address and port or UDS. "
+                             "Using /tmp/ss-manager-controller.sock by default.")
     parser.add_argument("--reset-date", type=int, default=1,
                         help="traffic record refresh date. Using 1 by default.")
     parser.add_argument("--reset-time", type=int, default=1,
@@ -54,25 +56,29 @@ if __name__ == '__main__':
     load(**args.__dict__)
     if args.command == "run":
         # Start ss-manager
-        subprocess.Popen(["/usr/bin/ss-manager",
-                          "--manager-address", "/tmp/manager.sock",
-                          "--executable", "/usr/bin/ss-server",
-                          "-c", "/etc/shadowsocks-libev/config.json"])
-        threading.Thread(target=api_controller).start()
+        # subprocess.Popen(["/usr/bin/ss-manager",
+        #                   "--manager-address", "/tmp/manager.sock",
+        #                   "--executable", "/usr/bin/ss-server",
+        #                   "-c", "/etc/shadowsocks-libev/config.json"])
+        # /usr/bin/ss-manager --manager-address /tmp/manager.sock
+        # --executable /usr/bin/ss-server -c /etc/shadowsocks-libev/config.json
+
+        # Start api controller
+        t = threading.Thread(target=TCPTransporter(settings.api_address, settings.key).recv, args=(api_handler, ))
+        t.daemon = True
+        t.start()
+        # Start reset crontab
+        # os.system(f"echo '0  {settings.reset_time}    {settings.reset_date} * *   root    "
+        #           f"cd /ss-manager-controller && python3 main.py reset' >> /etc/crontab")
+        # os.system("cron")
         supervisor()
     elif args.command == "reset":
         reset()
     elif args.command == "add":
-        sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-        sock.sendto(f"add:{args.monthly_traffic * 1024 * 1024 * 1024}".encode(), "/tmp/ss-manager-controller.sock")
-        print(sock.recvfrom(1024 * 1024)[0].decode())
-    elif args.command == "add":
-        sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-        sock.sendto(f"del:{args.port}".encode(), "/tmp/ss-manager-controller.sock")
-        print(sock.recvfrom(1024 * 1024)[0].decode())
+        TCPTransporter(settings.api_address, settings.key).send(f"add:{args.monthly_traffic * 1024 * 1024 * 1024}")
+    elif args.command == "del":
+        TCPTransporter(settings.api_address, settings.key).send(f"del:{args.port}")
     elif args.command == "list":
-        sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-        sock.sendto("list".encode(), "/tmp/ss-manager-controller.sock")
-        print(sock.recvfrom(1024 * 1024)[0].decode())
+        TCPTransporter(settings.api_address, settings.key).send("list")
     else:
         pass

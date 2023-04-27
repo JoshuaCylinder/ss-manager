@@ -9,8 +9,6 @@ import settings
 from utils.controller import SSManagerController
 
 users = []
-controller = None
-port_pool = []
 
 
 class User:
@@ -75,9 +73,8 @@ def load(**kwargs):
     for key, value in kwargs.items():
         setattr(settings, key, value)
     # Load controller and port_pool
-    global controller, port_pool
-    controller = SSManagerController(settings.addrport_or_sock)
-    port_pool = list(range(settings.start_port, settings.end_port))
+    settings.controller = SSManagerController(settings.ss_manager_address, settings.key)
+    settings.port_pool = list(range(settings.start_port, settings.end_port))
     # Load users from file
     if os.path.exists(settings.data_filename):
         with open(settings.data_filename) as csvfile:
@@ -95,10 +92,6 @@ def load(**kwargs):
 
 
 def supervisor():
-    # Start reset crontab
-    os.system(f"echo '0  {settings.reset_time}    {settings.reset_date} * *   root    "
-              f"cd /ss-manager-controller && python3 main.py reset' >> /etc/crontab")
-    os.system("cron")
     # Start service
     while True:
         time.sleep(settings.refresh_interval)
