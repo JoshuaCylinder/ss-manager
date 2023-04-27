@@ -1,4 +1,4 @@
-# SS Manager Controller
+# SS Manager
 
 This project is a tool for sharing Shadowsocks protocol dedicated line nodes, written in Python and relying on the
 ss-manager executable program of shadowsocks-libev.
