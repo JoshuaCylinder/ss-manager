@@ -8,12 +8,14 @@ ip_re = re.compile(r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5
 class SSManagerController:
     def __init__(self, addrport_or_sock: str):
         if ":" in addrport_or_sock:
+            self.type = socket.AF_INET
             self.address = (addrport_or_sock.split(":")[0], int(addrport_or_sock.split(":")[1]))
         else:
+            self.type = socket.AF_UNIX
             self.address = addrport_or_sock
 
     def _call(self, to_send: str):
-        sock = socket.socket(socket.AF_UNIX if isinstance(self.address, str) else socket.AF_INET, socket.SOCK_DGRAM)
+        sock = socket.socket(self.type, socket.SOCK_DGRAM)
         sock.sendto((to_send + "\n").encode(), self.address)
         return sock.recvfrom(1024 * 1024)[0].decode()
 
