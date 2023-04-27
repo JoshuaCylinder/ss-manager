@@ -1,6 +1,6 @@
-# SS Manager Controller
+# SS Manager
 
-Other languages: [en](https://github.com/JoshuaCylinder/ss-manager-controller/blob/master/docs/en.md)
+Other languages: [en](https://github.com/JoshuaCylinder/ss-manager/blob/master/docs/en.md)
 
 该项目是一个用于分享Shadowsocks协议专线节点的工具，基于Python编写，依赖于shadowsocks-libev的ss-manager可执行程序。  
 
