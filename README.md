@@ -36,7 +36,7 @@ Other languages: [en](https://github.com/JoshuaCylinder/ss-manager-controller/bl
 | --key                     | -k   | 网络传输加密的AES密钥(务必修改)               | 0123456789abcdef                |
 | --data-filename           | -f   | 数据持久化存储的csv文件名                   | ss-manager.csv                  |
 | --start-port              | -sp  | 用户端口池的起始端口（包括）                   | 8001                            |
-| --end-port                | ep   | 用户端口池的结束端口（不包括）                  | 8501                            |
+| --end-port                | -ep  | 用户端口池的结束端口（不包括）                  | 8501                            |
 | --default-monthly-traffic | -dmt | 默认的月流量限制（GB）                     | 100                             |
 | --refresh-interval        | -ri  | 数据写入和流量检查的间隔时间（秒）                | 30                              |
 | --ss-manager-address      | -sma | ss-manager的地址，支持网络地址和端口或Unix域套接字 | /tmp/manager.sock               |
