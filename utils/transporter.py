@@ -1,6 +1,8 @@
 import abc
 import os.path
 import socket
+import uuid
+
 from utils.encryption import encrypt as e, decrypt as d
 
 SENDER = 0
@@ -16,8 +18,6 @@ class TransporterBase:
             self.conn_type = socket.AF_INET
             self.address = (addrport_or_sock.split(":")[0], int(addrport_or_sock.split(":")[1]))
         else:
-            if os.path.exists(addrport_or_sock):
-                os.remove(addrport_or_sock)
             self.conn_type = socket.AF_UNIX
             self.address = addrport_or_sock
         self.protocol = 0
@@ -30,6 +30,8 @@ class TransporterBase:
         sock = socket.socket(self.conn_type, self.protocol)
         if character == RECEIVER:
             # receiver
+            if os.path.exists(self.address):
+                os.remove(self.address)
             sock.bind(self.address)
         else:
             # sender
@@ -91,16 +93,26 @@ class TCPTransporter(TransporterBase):
 class UDPTransporter(TransporterBase):
     def init_sock(self, character) -> socket.socket:
         self.protocol = socket.SOCK_DGRAM
-        return super().init_sock(character)
+        sock = super().init_sock(character)
+        if character == SENDER and self.conn_type == socket.AF_UNIX:
+            # When using UDP over Unix Domain Socket.
+            # Client also need to bind to a socket to receive the packet posted back.
+            # Using socket of random string as default. Remove it after result received.
+            sock.bind(f"/tmp/{uuid.uuid4()}.sock")
+        return sock
 
     def send(self, data):
-        self.sock = self.init_sock(SENDER)
-        data = e(data)
-        if len(data) > 1024:
-            raise RuntimeError("Data size is too big for UDP transporter (more than 1024 bytes). Use TCP instead.")
-        self.sock.send(data.encode())
-        data, _ = self.sock.recvfrom(1024)
-        return d(data.decode())
+        try:
+            self.sock = self.init_sock(SENDER)
+            data = e(data)
+            if len(data) > 1024:
+                raise RuntimeError("Data size is too big for UDP transporter (more than 1024 bytes). Use TCP instead.")
+            self.sock.send(data.encode())
+            data, _ = self.sock.recvfrom(1024)
+            return d(data.decode())
+        finally:
+            if self.conn_type == socket.AF_UNIX:
+                os.remove(self.sock.getsockname())
 
     def recv(self, handler):
         self.sock = self.init_sock(RECEIVER)
