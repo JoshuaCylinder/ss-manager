@@ -19,7 +19,7 @@ class User:
             port = random.choice(settings.port_pool)
             settings.port_pool.remove(port)
         self.port = port
-        self.password = password or uuid.uuid4()
+        self.password = password or str(uuid.uuid4())
         self.total_traffic = self.current_traffic = last_traffic or monthly_traffic
         self.monthly_traffic = monthly_traffic
         if self.current_traffic:
@@ -27,7 +27,7 @@ class User:
 
     @property
     def row_data(self):
-        return [str(self.port), self.password, str(self.current_traffic)]
+        return [str(self.port), self.password, str(self.monthly_traffic), str(self.current_traffic)]
 
     def refresh(self, traffic_used: int):
         """
@@ -76,7 +76,7 @@ def load(**kwargs):
     settings.controller = SSManagerController(settings.ss_manager_address)
     settings.port_pool = list(range(settings.start_port, settings.end_port))
     # Load users from file
-    if os.path.exists(settings.data_filename):
+    if os.path.exists(settings.data_filename) and kwargs["command"] == "run":
         with open(settings.data_filename) as csvfile:
             reader = csv.reader(csvfile)
             for index, row in enumerate(reader):
@@ -94,8 +94,11 @@ def load(**kwargs):
 def supervisor():
     # Start service
     while True:
-        time.sleep(settings.refresh_interval)
-        _refresh()
+        try:
+            time.sleep(settings.refresh_interval)
+            _refresh()
+        except KeyboardInterrupt:
+            break
 
 
 def add_user(monthly_traffic: int):
