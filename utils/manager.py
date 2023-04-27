@@ -73,7 +73,7 @@ def load(**kwargs):
     for key, value in kwargs.items():
         setattr(settings, key, value)
     # Load controller and port_pool
-    settings.controller = SSManagerController(settings.ss_manager_address, settings.key)
+    settings.controller = SSManagerController(settings.ss_manager_address)
     settings.port_pool = list(range(settings.start_port, settings.end_port))
     # Load users from file
     if os.path.exists(settings.data_filename):
