@@ -1,6 +1,9 @@
 # SS Manager Controller
 
-该项目是一个用于分享Shadowsocks协议专线节点的工具，基于Python编写，依赖于shadowsocks-libev的ss-manager可执行程序。
+Other languages: [en](https://github.com/JoshuaCylinder/ss-manager-controller/blob/master/docs/en.md)
+
+该项目是一个用于分享Shadowsocks协议专线节点的工具，基于Python编写，依赖于shadowsocks-libev的ss-manager可执行程序。  
+
 
 ## 功能
 
@@ -13,8 +16,7 @@
 
 ## 安装
 
-1. 安装依赖：`pip install -r requirements.txt`
-2. 下载ss-manager：请自行下载安装
+(略)
 
 ## 使用
 
@@ -45,6 +47,7 @@
 ## 未来计划
 
 - 添加网页界面，提供用户统计信息、新建删除用户等功能。
+- 添加用户nickname属性，用于更方便的用户管理。
 - 支持通过Web API进行操作。
 - 更多协议 (?)
 
