@@ -1,5 +1,5 @@
 import argparse
-import random
+import os
 import threading
 
 import settings
@@ -61,21 +61,14 @@ if __name__ == '__main__':
     # Load data and init users
     load(**args.__dict__)
     if args.command == "run":
-        # Start ss-manager
-        # subprocess.Popen(["/usr/bin/ss-manager",
-        #                   "--manager-address", "/tmp/manager.sock",
-        #                   "--executable", "/usr/bin/ss-server",
-        #                   "-c", "/etc/shadowsocks-libev/config.json"])
-        # /usr/bin/ss-manager --manager-address /tmp/manager.sock --executable /usr/bin/ss-server -c /etc/shadowsocks-libev/config.json
-
         # Start api controller
         t = threading.Thread(target=TCPTransporter(settings.api_address, settings.key).recv, args=(api_handler, ))
         t.daemon = True
         t.start()
         # Start reset crontab
-        # os.system(f"echo '0  {settings.reset_time}    {settings.reset_date} * *   root    "
-        #           f"cd /ss-manager-controller && python3 main.py reset' >> /etc/crontab")
-        # os.system("cron")
+        os.system(f"echo '0  {settings.reset_time}    {settings.reset_date} * *   root    "
+                  f"cd /ss-manager-controller && python3 main.py reset' >> /etc/crontab")
+        os.system("cron")
         supervisor()
     elif args.command == "reset":
         reset()
