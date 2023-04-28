@@ -10,7 +10,7 @@ ss-manager executable program of shadowsocks-libev.
 - Add user: add users through the add command and existed user with same name will be overwritten.
 - Delete user: delete users through the del command.
 - Print subscription link: print the subscription link of the specified user through the sub command.
-- List all users: list all users through the list command.
+- List all users: list all users' info including port, password and traffic through the list command.
 - Update traffic regularly: set the time for traffic update and help all users to restore to the monthly traffic limit
   at the specified time.
 
