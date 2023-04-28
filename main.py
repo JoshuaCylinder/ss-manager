@@ -5,8 +5,7 @@ import threading
 import settings
 from utils.encryption import format_secret
 from utils.manager import supervisor, reset, load
-from utils.api import api_handler
-from utils.transporter import TCPTransporter
+from utils import api
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -18,14 +17,20 @@ if __name__ == '__main__':
     subprasers.add_parser("reset", help="reset users' traffic. Normally used by crontab.")
     subprasers.add_parser("list", help="print all users' info")
     add = subprasers.add_parser("add", help="add new user")
-    add.add_argument("-t", "--monthly-traffic", type=int, default=100,
-                     help="monthly traffic set for this user (GB). Using 100 by default.")
+    add.add_argument("-n", "--name", type=str, required=True,
+                     help="name of the user")
+    add.add_argument("-P", "--port", type=int, default=0,
+                     help="specific port you want to use. Left empty to use random available port.")
+    add.add_argument("-p", "--password", type=str, default="",
+                     help="specific password you want to use. Recommended to left empty to use uuid.")
+    add.add_argument("-t", "--monthly-traffic", type=int, default=0,
+                     help="monthly traffic set for this user (GB). Using --default-monthly-traffic by default.")
     delete = subprasers.add_parser("del", help="delete user from ss-manager")
-    delete.add_argument("-p", "--port", type=str, required=True,
-                        help="indicate the port of user to remove")
+    delete.add_argument("-n", "--name", type=str, required=True,
+                        help="name of the user")
     subscription = subprasers.add_parser("sub", help="print user's subscription")
-    subscription.add_argument("-p", "--port", type=str, required=True,
-                              help="indicate the port of user to print subscription")
+    subscription.add_argument("-n", "--name", type=str, required=True,
+                              help="name of the user")
     parser.add_argument("-ss", "--ss-server", type=str, default="localhost",
                         help="ss-server address or domain using to generate subscription url.")
     parser.add_argument("-se", "--ss-encryption", type=str, default="aes-128-gcm",
@@ -62,23 +67,24 @@ if __name__ == '__main__':
     load(**args.__dict__)
     if args.command == "run":
         # Start api controller
-        t = threading.Thread(target=TCPTransporter(settings.api_address, settings.key).recv, args=(api_handler, ))
+        t = threading.Thread(target=api.handler)
         t.daemon = True
         t.start()
-        # Start reset crontab
-        os.system(f"echo '0  {settings.reset_time}    {settings.reset_date} * *   root    "
-                  f"cd /ss-manager-controller && python3 main.py reset' >> /etc/crontab")
-        os.system("cron")
+        # Start reset crontab in container
+        if os.environ.get("CONTAINER") == "true":
+            os.system(f"echo '0  {settings.reset_time}    {settings.reset_date} * *   root    "
+                      f"cd /ss-manager-controller && python3 main.py reset' >> /etc/crontab")
+            os.system("cron")
         supervisor()
     elif args.command == "reset":
         reset()
     elif args.command == "add":
-        print(TCPTransporter(settings.api_address, settings.key).send(f"add:{args.monthly_traffic * 1024 * 1024 * 1024}"))
+        api.add(args.name, str(args.port), args.password, str(args.monthly_traffic))
     elif args.command == "del":
-        print(TCPTransporter(settings.api_address, settings.key).send(f"del:{args.port}"))
+        api.delete(args.name)
     elif args.command == "sub":
-        print(TCPTransporter(settings.api_address, settings.key).send(f"sub:{args.port}"))
+        api.sub(args.name)
     elif args.command == "list":
-        print(TCPTransporter(settings.api_address, settings.key).send("list"))
+        api.list_all()
     else:
         pass

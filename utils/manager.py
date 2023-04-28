@@ -8,20 +8,24 @@ from prettytable import PrettyTable
 
 import settings
 from utils.controller import SSManagerController
+from utils.exceptions import ConflictPortException, UserNotFoundError
 
 users = []
 
 
 class User:
-    def __init__(self, port: int = None, password: str = None, last_traffic: int = None,
-                 monthly_traffic: int = settings.default_monthly_traffic):
+    def __init__(self, name: str, port: int, password: str, last_traffic: int, monthly_traffic: int):
+        self.name = name
         if not port:
-            # Create user
             port = random.choice(settings.port_pool)
             settings.port_pool.remove(port)
+        else:
+            for user in users:
+                if user.port == port:
+                    raise ConflictPortException(port)
         self.port = port
         self.password = password or str(uuid.uuid4())
-        self.total_traffic = self.current_traffic = last_traffic or monthly_traffic
+        self.total_traffic = self.current_traffic = last_traffic
         self.monthly_traffic = monthly_traffic
         settings.controller.remove(self.port)
         if self.current_traffic:
@@ -29,11 +33,11 @@ class User:
 
     @property
     def row_data(self):
-        return [str(self.port), self.password, str(self.monthly_traffic), str(self.current_traffic)]
+        return [self.name, str(self.port), self.password, str(self.monthly_traffic), str(self.current_traffic)]
 
     def refresh_last_traffic(self, traffic_used: int):
         """
-        Refresh traffic usage return whether this user is still valid
+        Refresh traffic usage
         :param traffic_used:
         :return:
         """
@@ -82,15 +86,15 @@ def load(**kwargs):
         with open(settings.data_filename) as csvfile:
             reader = csv.reader(csvfile)
             for index, row in enumerate(reader):
-                # port, password, monthly_traffic, last_traffic
-                users.append(User(int(row[0]), row[1], int(row[3]), int(row[2])))
-                if int(row[0]) not in settings.port_pool:
+                # name, port, password, monthly_traffic, last_traffic
+                users.append(User(row[0], int(row[1]), row[2], int(row[4]), int(row[3])))
+                if int(row[1]) not in settings.port_pool:
                     raise RuntimeError(
                         f"User of line {index + 1} with port {row[0]} is not in current port pool. "
                         f"This issue maybe caused by the modification of user port range. "
                         f"You must edit data file by yourself or use other appropriate port range."
                     )
-                settings.port_pool.remove(int(row[0]))
+                settings.port_pool.remove(int(row[1]))
 
 
 def supervisor():
@@ -100,32 +104,40 @@ def supervisor():
             time.sleep(settings.refresh_interval)
             _refresh()
         except KeyboardInterrupt:
+            for user in users:
+                settings.controller.remove(user.port)
             break
 
 
-def add_user(monthly_traffic: int):
-    users.append(User(monthly_traffic=monthly_traffic))
-    _refresh()
-
-
-def del_user(port: int):
-    settings.controller.remove(port)
-    for user in users:
-        if user.port == port:
-            users.remove(user)
-            break
+def add_user(name: str, port: int, password: str, monthly_traffic: int):
+    traffic = (monthly_traffic or settings.default_monthly_traffic) * 1024 ** 3
+    users.append(User(name, port, password, traffic, traffic))
     _refresh()
 
 
 def list_users():
-    table = PrettyTable(['port', 'password', 'monthly_traffic', 'last_traffic'])
+    table = PrettyTable(['name', 'port', 'password', 'monthly_traffic', 'last_traffic'])
     for user in users:
         table.add_row([
-            str(user.port), user.password,
+            user.name, str(user.port), user.password,
             str(round(user.monthly_traffic / 1024 / 1024 / 1024, 2)) + "GB",
             str(round(user.current_traffic / 1024 / 1024 / 1024, 2)) + "GB"
         ])
     return str(table)
+
+
+def _get_user(name: str):
+    for user in users:
+        if user.name == name:
+            return user
+    raise UserNotFoundError(name)
+
+
+def del_user(name: str):
+    user = _get_user(name)
+    settings.controller.remove(user.port)
+    users.remove(user)
+    _refresh()
 
 
 def generate_shadowsocks_subscription_url(server, port, method, password):
@@ -137,19 +149,14 @@ def generate_shadowsocks_subscription_url(server, port, method, password):
     :param password: 密码
     :return: Shadowsocks订阅地址
     """
-    subscription_url = f"ss://{method}:{password}@{server}:{port}"
-    subscription_url = base64.urlsafe_b64encode(subscription_url.encode()).decode()
-    subscription_url = f"ss://{subscription_url}"
-    return subscription_url
+    return f"ss://" + base64.urlsafe_b64encode(f"{method}:{password}@{server}:{port}".encode()).decode()
 
 
-def get_sub(port: int):
-    for user in users:
-        if user.port == port:
-            return generate_shadowsocks_subscription_url(
-                settings.ss_server, port, settings.ss_encryption, user.password
-            )
-    return "User not found"
+def get_sub(name: str):
+    user = _get_user(name)
+    return generate_shadowsocks_subscription_url(
+        settings.ss_server, user.port, settings.ss_encryption, user.password
+    ) + "#" + name
 
 
 def reset():

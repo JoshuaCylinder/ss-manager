@@ -4,5 +4,6 @@ RUN apt update && apt install -y shadowsocks-libev cron python3 python3-pip &&  
     apt clean && apt autoclean && apt autoremove && pip install --no-cache prettytable
 COPY ./utils ./utils
 COPY main.py settings.py ./
+ENV CONTAINER="true"
 
 ENTRYPOINT ["python3", "main.py", "run"]
