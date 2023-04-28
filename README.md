@@ -49,5 +49,6 @@ Other languages: [en](https://github.com/JoshuaCylinder/ss-manager/blob/master/d
 - 添加网页界面，提供用户统计信息、新建删除用户等功能。
 - 添加用户nickname属性，用于更方便的用户管理。
 - 支持通过Web API进行操作。
+- 完善日志记录。
 - 更多协议 (?)
 

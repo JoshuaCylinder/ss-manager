@@ -49,4 +49,5 @@ ss-manager executable program of shadowsocks-libev.
 - Add a web interface to provide user statistics, create and delete users and other functions.
 - Add the nickname property for users for easier user management.
 - Support operations through Web API.
+- Add more logs.
 - More protocols (?)
