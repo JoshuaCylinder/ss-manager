@@ -7,7 +7,7 @@ ss-manager executable program of shadowsocks-libev.
 
 - Monitor program: start ss-manager monitor, periodically synchronize the traffic usage of each port user to the disk
   file, and synchronize the users with non-empty remaining traffic to ss-manager.
-- Add user: add users through the add command.
+- Add user: add users through the add command and existed user with same name will be overwritten.
 - Delete user: delete users through the del command.
 - Print subscription link: print the subscription link of the specified user through the sub command.
 - List all users: list all users through the list command.
@@ -33,7 +33,7 @@ ss-manager executable program of shadowsocks-libev.
 | --help                    | -h    | Display help information and exit                                                            |                                   |
 | --ss-server               | -ss   | ss-server address or domain name used to generate subscription links                         | localhost                         |
 | --ss-encryption           | -se   | ss-server encryption method used to generate subscription links                              | aes-128-gcm                       |
-| --key                     | -k    | AES key for network transmission encryption (be sure to modify)                              | 0123456789abcdef                  |
+| --key                     | -k    | AES key for network transmission encryption (with AES-GCM, be sure to modify)                | 0123456789abcdef                  |
 | --data-filename           | -f    | CSV file name for data persistence storage                                                   | ss-manager.csv                    |
 | --start-port              | -sp   | Starting port of user port pool (inclusive)                                                  | 8001                              |
 | --end-port                | -ep   | End port of user port pool (exclusive)                                                       | 8501                              |
@@ -47,7 +47,6 @@ ss-manager executable program of shadowsocks-libev.
 ## Future Plans
 
 - Add a web interface to provide user statistics, create and delete users and other functions.
-- Add the nickname property for users for easier user management.
 - Support operations through Web API.
 - Add more logs.
 - More protocols (?)

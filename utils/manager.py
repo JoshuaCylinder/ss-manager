@@ -110,6 +110,10 @@ def supervisor():
 
 
 def add_user(name: str, port: int, password: str, monthly_traffic: int):
+    try:
+        del_user(name)
+    except UserNotFoundError:
+        pass
     traffic = (monthly_traffic or settings.default_monthly_traffic) * 1024 ** 3
     users.append(User(name, port, password, traffic, traffic))
     _refresh()
