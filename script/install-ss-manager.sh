@@ -48,7 +48,7 @@ systemctl enable ss-manager
 systemctl start ss-manager
 
 # Install package
-pip3 install sdist/ss-manager-1.0.0.tar.gz
+pip3 install dist/ss-manager-1.0.0.tar.gz
 
 # Initiate ss-managerd service
 rm -f /usr/lib/systemd/system/ss-managerd.service
