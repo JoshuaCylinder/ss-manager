@@ -66,6 +66,7 @@ AmbientCapabilities=CAP_NET_BIND_SERVICE
 EnvironmentFile=/etc/default/shadowsocks-libev
 LimitNOFILE=32768
 ExecStart=ss-managerd -ss \$SS_ENTRANCE run
+ExecStopPost=sleep 2
 
 [Install]
 WantedBy=multi-user.target
