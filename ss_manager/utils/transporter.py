@@ -31,7 +31,7 @@ class TransporterBase:
         sock = socket.socket(self.conn_type, self.protocol)
         if character == RECEIVER:
             # receiver
-            if ":" not in self.address and os.path.exists(self.address):
+            if not isinstance(self.address, tuple) and os.path.exists(self.address):
                 os.remove(self.address)
             sock.bind(self.address)
         else:
