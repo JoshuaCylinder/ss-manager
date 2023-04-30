@@ -47,7 +47,10 @@ systemctl stop ss-manager
 systemctl enable ss-manager
 systemctl start ss-manager
 
-# Initiate ss-manager service
+# Install package
+pip3 install sdist/ss-manager-1.0.0.tar.gz
+
+# Initiate ss-managerd service
 rm -f /usr/lib/systemd/system/ss-managerd.service
 cat << EOF >> /usr/lib/systemd/system/ss-managerd.service
 [Unit]
@@ -62,7 +65,7 @@ CapabilityBoundingSet=CAP_NET_BIND_SERVICE
 AmbientCapabilities=CAP_NET_BIND_SERVICE
 EnvironmentFile=/etc/default/shadowsocks-libev
 LimitNOFILE=32768
-ExecStart=ss-managerd run -ss $SS_ENTRANCE
+ExecStart=ss-managerd -ss $SS_ENTRANCE run
 
 [Install]
 WantedBy=multi-user.target
