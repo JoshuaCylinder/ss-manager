@@ -35,18 +35,18 @@ def main():
     parser.add_argument("-sma", "--ss-manager-address", type=str, default="127.0.0.1:7968",
                         help="address of ss-manager. Supporting net address and port or UDS. "
                              "Using 127.0.0.1:7968 by default.")
-    parser.add_argument("-aa", "--api-address", type=str, default="/tmp/ss-manager-controller.sock",
+    parser.add_argument("-aa", "--api-address", type=str, default="127.0.0.1:7969",
                         help="address of controllers api service. Supporting net address and port or UDS. "
-                             "Using /tmp/ss-manager-controller.sock by default.")
+                             "Using 127.0.0.1:7969 by default.")
+    parser.add_argument("-f", "--data-filename", type=str, default="/var/lib/ss-manager.csv",
+                        help="name of the csv file used for persistent storage of data. "
+                             "Using /var/lib/ss-manager.csv by default.")
     parser.add_argument("-ss", "--ss-server", type=str, default="localhost",
                         help="ss-server address or domain using to generate subscription url.")
     parser.add_argument("-se", "--ss-encryption", type=str, default="aes-128-gcm",
                         help="ss-server encryption using to generate subscription url. Using aes-128-gcm as default.")
     parser.add_argument("-k", "--key", type=str, default="0123456789abcdef",
                         help="the AES key of network transportation encryption.")
-    parser.add_argument("-f", "--data-filename", type=str, default="ss-manager.csv",
-                        help="name of the csv file used for persistent storage of data. "
-                             "Using ss-manager.csv by default.")
     parser.add_argument("-sp", "--start-port", type=int, default=8001,
                         help="users' port pool start point (included). Using 8001 by default.")
     parser.add_argument("-ep", "--end-port", type=int, default=8501,

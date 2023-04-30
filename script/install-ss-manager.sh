@@ -47,4 +47,31 @@ systemctl stop ss-manager
 systemctl enable ss-manager
 systemctl start ss-manager
 
+# Initiate ss-manager service
+rm -f /usr/lib/systemd/system/ss-managerd.service
+cat << EOF >> /usr/lib/systemd/system/ss-managerd.service
+[Unit]
+Description=Shadowsocks Manager Service Daemon
+After=ss-manager.service
+Wants=ss-manager.service
+
+[Service]
+User=root
+Type=simple
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+EnvironmentFile=/etc/default/shadowsocks-libev
+LimitNOFILE=32768
+ExecStart=ss-managerd run -ss $SS_ENTRANCE
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# start ss-manager service
+systemctl daemon-reload
+systemctl stop ss-managerd
+systemctl enable ss-managerd
+systemctl start ss-managerd
+
 echo "Successfully installed ss-manager"
