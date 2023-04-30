@@ -2,12 +2,13 @@ import argparse
 import os
 import threading
 
-import settings
-from utils.encryption import format_secret
-from utils.manager import supervisor, reset, load
-from utils import api
+import ss_manager.settings as settings
+from ss_manager.utils.encryption import format_secret
+from ss_manager.utils.manager import supervisor, reset, load
+from ss_manager.utils import api
 
-if __name__ == '__main__':
+
+def main():
     parser = argparse.ArgumentParser(
         prog="ss-manager-controller",
         description="A simple program using for sharing shadowsocks server. Basing on ss-manager."
@@ -31,6 +32,12 @@ if __name__ == '__main__':
     subscription = subprasers.add_parser("sub", help="print user's subscription")
     subscription.add_argument("-n", "--name", type=str, required=True,
                               help="name of the user")
+    parser.add_argument("-sma", "--ss-manager-address", type=str, default="127.0.0.1:7968",
+                        help="address of ss-manager. Supporting net address and port or UDS. "
+                             "Using 127.0.0.1:7968 by default.")
+    parser.add_argument("-aa", "--api-address", type=str, default="/tmp/ss-manager-controller.sock",
+                        help="address of controllers api service. Supporting net address and port or UDS. "
+                             "Using /tmp/ss-manager-controller.sock by default.")
     parser.add_argument("-ss", "--ss-server", type=str, default="localhost",
                         help="ss-server address or domain using to generate subscription url.")
     parser.add_argument("-se", "--ss-encryption", type=str, default="aes-128-gcm",
@@ -48,12 +55,6 @@ if __name__ == '__main__':
                         help="default monthly traffic (GB). Using 100 by default.")
     parser.add_argument("-ri", "--refresh-interval", type=int, default=30,
                         help="interval of writing data and check traffic usage. Using 30 by default.")
-    parser.add_argument("-sma", "--ss-manager-address", type=str, default="/tmp/manager.sock",
-                        help="address of ss-manager. Supporting net address and port or UDS. "
-                             "Using /tmp/manager.sock by default.")
-    parser.add_argument("-aa", "--api-address", type=str, default="/tmp/ss-manager-controller.sock",
-                        help="address of controllers api service. Supporting net address and port or UDS. "
-                             "Using /tmp/ss-manager-controller.sock by default.")
     parser.add_argument("-rd", "--reset-date", type=int, default=1,
                         help="traffic record refresh date. Using 1 by default.")
     parser.add_argument("-rt", "--reset-time", type=int, default=1,

@@ -3,7 +3,7 @@ import os.path
 import socket
 import uuid
 
-from utils.encryption import encrypt as e, decrypt as d
+from ss_manager.utils.encryption import encrypt as e, decrypt as d
 
 SENDER = 0
 RECEIVER = 1
@@ -112,7 +112,7 @@ class UDPTransporter(TransporterBase):
             data, _ = self.sock.recvfrom(1024)
             return d(self.key, data.decode())
         finally:
-            if self.conn_type == socket.AF_UNIX:
+            if self.conn_type == socket.AF_UNIX and self.sock:
                 os.remove(self.sock.getsockname())
 
     def recv(self, handler):

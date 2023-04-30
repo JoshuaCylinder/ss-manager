@@ -1,4 +1,4 @@
-from utils.controller import SSManagerController
+from ss_manager.utils.controller import SSManagerController
 
 data_filename = "/var/lib/ss-manager.csv"
 sock = "/tmp/ss-manager-controller.sock"

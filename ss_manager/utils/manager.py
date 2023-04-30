@@ -6,9 +6,9 @@ import time
 import uuid
 from prettytable import PrettyTable
 
-import settings
-from utils.controller import SSManagerController
-from utils.exceptions import ConflictPortException, UserNotFoundError
+from ss_manager import settings
+from ss_manager.utils.controller import SSManagerController
+from ss_manager.utils.exceptions import ConflictPortException, UserNotFoundError
 
 users = []
 

@@ -1,6 +1,6 @@
 import json
 import re
-from utils.transporter import UDPTransporter
+from ss_manager.utils.transporter import UDPTransporter
 
 ip_re = re.compile(r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
 
