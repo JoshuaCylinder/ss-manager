@@ -35,7 +35,7 @@ CapabilityBoundingSet=CAP_NET_BIND_SERVICE
 AmbientCapabilities=CAP_NET_BIND_SERVICE
 EnvironmentFile=/etc/default/shadowsocks-libev
 LimitNOFILE=32768
-ExecStart=/usr/bin/ss-manager -D /tmp/ss-manager --manager-address 127.0.0.1:7968 --executable \$(which ss-server) -c /etc/shadowsocks-libev/config.json
+ExecStart=/usr/bin/ss-manager -D /tmp/ss-manager --manager-address 127.0.0.1:7968 --executable /usr/bin/ss-server -c /etc/shadowsocks-libev/config.json
 
 [Install]
 WantedBy=multi-user.target
