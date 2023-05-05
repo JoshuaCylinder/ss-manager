@@ -63,6 +63,21 @@ def _refresh():
     """
     # Collect users who do not exceed traffic limit to write in data file
     traffic_data = settings.controller.ping()
+    if not traffic_data and os.path.getsize(settings.data_filename) != 0:
+        # Prevent overwriting when initiate data file in new server
+        with open(settings.data_filename) as csvfile:
+            reader = csv.reader(csvfile)
+            for index, row in enumerate(reader):
+                # name, port, password, monthly_traffic, last_traffic
+                users.append(User(row[0], int(row[1]), row[2], int(row[4]), int(row[3])))
+                if int(row[1]) not in settings.port_pool:
+                    raise RuntimeError(
+                        f"User of line {index + 1} with port {row[0]} is not in current port pool. "
+                        f"This issue maybe caused by the modification of user port range. "
+                        f"You must edit data file by yourself or use other appropriate port range."
+                    )
+                settings.port_pool.remove(int(row[1]))
+        return
     with open(settings.data_filename, "w") as csvfile:
         writer = csv.writer(csvfile)
         for index, user in enumerate(users):

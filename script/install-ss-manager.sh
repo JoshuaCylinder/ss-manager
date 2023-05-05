@@ -16,6 +16,23 @@ fi
 # Install shadowsocks-libev if not exists
 apt update && apt install -y python3 python3-pip shadowsocks-libev
 
+# get ss-server entrance
+read -rp "Enter the shadowsocks entrance ip or host you want to use: " ss_server
+echo "SS_ENTRANCE=\"$ss_server\"" >> /etc/default/shadowsocks-libev
+
+# get server encryption
+read -rp "Entry the encryption you want to use (default aes-128-gcm): " encryption
+if [[ "$encryption" == "" ]];then
+  echo "Using aes-128-gcm as server encryption"
+  encryption="aes-128-gcm"
+fi
+rm -f /etc/shadowsocks-libev/manager.json
+cat << EOF >> /etc/shadowsocks-libev/manager.json
+{
+    "method": "$encryption"
+}
+EOF
+
 # Disable default ss-server service to prevent port conflict
 systemctl stop ss-server
 systemctl disable ss-server
@@ -29,13 +46,13 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-DynamicUser=true
+User=root
 Type=simple
 CapabilityBoundingSet=CAP_NET_BIND_SERVICE
 AmbientCapabilities=CAP_NET_BIND_SERVICE
 EnvironmentFile=/etc/default/shadowsocks-libev
 LimitNOFILE=32768
-ExecStart=/usr/bin/ss-manager -D /tmp/ss-manager --manager-address 127.0.0.1:7968 --executable /usr/bin/ss-server -c /etc/shadowsocks-libev/config.json
+ExecStart=/usr/bin/ss-manager --manager-address 127.0.0.1:7968 --executable /usr/bin/ss-server -c /etc/shadowsocks-libev/manager.json
 
 [Install]
 WantedBy=multi-user.target
@@ -65,7 +82,7 @@ CapabilityBoundingSet=CAP_NET_BIND_SERVICE
 AmbientCapabilities=CAP_NET_BIND_SERVICE
 EnvironmentFile=/etc/default/shadowsocks-libev
 LimitNOFILE=32768
-ExecStart=ss-managerd -ss \$SS_ENTRANCE run
+ExecStart=ss-managerd -se $encryption -ss \$SS_ENTRANCE run
 ExecStopPost=sleep 2
 
 [Install]
