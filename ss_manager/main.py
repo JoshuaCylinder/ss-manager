@@ -80,12 +80,12 @@ def main():
     elif args.command == "reset":
         reset()
     elif args.command == "add":
-        api.add(args.name, str(args.port), args.password, str(args.monthly_traffic))
+        print(api.add(args.name, str(args.port), args.password, str(args.monthly_traffic)))
     elif args.command == "del":
-        api.delete(args.name)
+        print(api.delete(args.name))
     elif args.command == "sub":
-        api.sub(args.name)
+        print(api.sub(args.name))
     elif args.command == "list":
-        api.list_all()
+        print(api.list_all())
     else:
         pass

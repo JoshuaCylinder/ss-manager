@@ -37,5 +37,5 @@ def handler():
 def __getattr__(name):
     def sender(*args):
         data = f"{name}" + (f":{':'.join(args)}" if args else "")
-        print(TCPTransporter(settings.api_address, settings.key).send(data))
+        return TCPTransporter(settings.api_address, settings.key).send(data)
     return sender
