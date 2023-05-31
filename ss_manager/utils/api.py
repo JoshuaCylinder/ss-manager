@@ -1,5 +1,5 @@
 from ss_manager import settings
-from ss_manager.utils.manager import add_user, del_user, list_users, get_sub
+from ss_manager.utils.manager import add_user, del_user, list_users, get_sub, reset as reset_origin
 from ss_manager.utils.exceptions import ConflictPortException, UserNotFoundError
 from ss_manager.utils.transporter import TCPTransporter
 
@@ -10,6 +10,10 @@ def _add(name, port, password, traffic):
 
 def _list_all():
     return list_users()
+
+
+def _reset():
+    return reset_origin()
 
 
 def _delete(name):

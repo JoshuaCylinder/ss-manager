@@ -78,7 +78,7 @@ def main():
             os.system("cron")
         supervisor()
     elif args.command == "reset":
-        reset()
+        print(api.reset())
     elif args.command == "add":
         print(api.add(args.name, str(args.port), args.password, str(args.monthly_traffic)))
     elif args.command == "del":
