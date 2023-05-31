@@ -21,10 +21,10 @@ read -rp "Enter the shadowsocks entrance ip or host you want to use: " ss_server
 echo "SS_ENTRANCE=\"$ss_server\"" >> /etc/default/shadowsocks-libev
 
 # get server encryption
-read -rp "Entry the encryption you want to use (default aes-128-gcm): " encryption
+read -rp "Entry the encryption you want to use (default aes-256-gcm): " encryption
 if [[ "$encryption" == "" ]];then
-  echo "Using aes-128-gcm as server encryption"
-  encryption="aes-128-gcm"
+  echo "Using aes-256-gcm as server encryption"
+  encryption="aes-256-gcm"
 fi
 rm -f /etc/shadowsocks-libev/manager.json
 cat << EOF >> /etc/shadowsocks-libev/manager.json
