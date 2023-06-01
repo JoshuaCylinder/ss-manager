@@ -29,7 +29,8 @@ fi
 rm -f /etc/shadowsocks-libev/manager.json
 cat << EOF >> /etc/shadowsocks-libev/manager.json
 {
-    "method": "$encryption"
+    "method": "$encryption",
+    "mode": "tcp_and_udp"
 }
 EOF
 
